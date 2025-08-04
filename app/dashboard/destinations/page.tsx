@@ -3,17 +3,18 @@ import { DestinationsTable } from "@/app/dashboard/destinations/_components/tabl
 import DestinationTableSkeleton from "@/app/dashboard/destinations/_components/table-skeleton";
 import { SiteHeader } from "@/components/site-header";
 
-interface PageProps {
-  searchParams: { page?: string; pageSize?: string; title?: string };
-}
-
 const pageConfig = {
   title: "Destinations",
 };
 
-export default function Page({ searchParams }: PageProps) {
-  const page = Number(searchParams.page) || 1;
-  const pageSize = Number(searchParams.pageSize) || 10;
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ page?: string; pageSize?: string; title?: string }>;
+}) {
+  const resolvedSearchParams = await searchParams;
+  const page = Number(resolvedSearchParams.page) || 1;
+  const pageSize = Number(resolvedSearchParams.pageSize) || 10;
 
   return (
     <>
