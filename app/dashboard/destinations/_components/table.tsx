@@ -1,38 +1,15 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { TablePagination } from "@/app/_components/table-pagination";
-import { MapPin, Heart, Bookmark, EllipsisVertical } from "lucide-react";
+import { Heart, Bookmark, EllipsisVertical, Text, Trash, Edit } from "lucide-react";
 import { DestinationRequest } from "@/lib/request/destination.request";
-import { DestinationType } from "@/lib/types";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { DestinationsTableProps, DestinationType, PaginationType } from "@/lib/types";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuShortcut, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-interface DestinationsTableProps {
-  page: number;
-  pageSize: number;
-  title?: string;
-}
-
-export async function DestinationsTable({
-  page,
-  pageSize,
-}: DestinationsTableProps) {
-  const data = await DestinationRequest.GETS(page, pageSize);
+export async function DestinationsTable({ page, pageSize }: DestinationsTableProps) {
+  const data: { data: DestinationType[]; pagination: PaginationType } = await DestinationRequest.GETS(page, pageSize);
   const { data: destinations, pagination } = data;
 
   return (
@@ -54,10 +31,8 @@ export async function DestinationsTable({
           <TableBody>
             {destinations.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
-                  <div className="text-muted-foreground">
-                    "No destinations found"
-                  </div>
+                <TableCell colSpan={8} className="text-center py-8">
+                  <div className="text-muted-foreground">"No destinations found"</div>
                 </TableCell>
               </TableRow>
             ) : (
@@ -68,28 +43,20 @@ export async function DestinationsTable({
                       <div className="font-medium">{destination.title}</div>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="text-sm text-muted-foreground line-clamp-1 whitespace-pre-wrap">
-                            {destination.content}
-                          </div>
+                          <div className="text-sm text-muted-foreground line-clamp-1 whitespace-pre-wrap">{destination.content}</div>
                         </TooltipTrigger>
-                        <TooltipContent className="max-w-[400px]">
-                          {destination.content}
-                        </TooltipContent>
+                        <TooltipContent className="max-w-[400px]">{destination.content}</TooltipContent>
                       </Tooltip>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary">
-                      {destination.category.name}
-                    </Badge>
+                    <Badge variant="secondary">{destination.category.name}</Badge>
                   </TableCell>
                   <TableCell>
                     <div className="flex justify-start items-center gap-1">
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <span className="text-sm whitespace-pre-wrap line-clamp-1">
-                            {destination.address}
-                          </span>
+                          <span className="text-sm whitespace-pre-wrap line-clamp-1">{destination.address}</span>
                         </TooltipTrigger>
                         <TooltipContent>{destination.address}</TooltipContent>
                       </Tooltip>
@@ -98,25 +65,13 @@ export async function DestinationsTable({
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
                       {destination.tags.map((tag) => (
-                        <Badge
-                          key={tag.slug}
-                          variant="outline"
-                          className="text-xs"
-                        >
+                        <Badge key={tag.slug} variant="outline" className="text-xs">
                           {tag.name}
                         </Badge>
                       ))}
                     </div>
                   </TableCell>
-                  <TableCell>
-                    {destination.price === 0 ? (
-                      <Badge variant="secondary">Free</Badge>
-                    ) : (
-                      <span className="font-medium">
-                        ${destination.price?.toLocaleString()}
-                      </span>
-                    )}
-                  </TableCell>
+                  <TableCell>{destination.price === 0 ? <Badge variant="secondary">Free</Badge> : <span className="font-medium">${destination.price?.toLocaleString()}</span>}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-3 text-sm text-muted-foreground">
                       <div className="flex items-center gap-1">
@@ -130,9 +85,7 @@ export async function DestinationsTable({
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm">
-                      {new Date(destination.createdAt).toLocaleDateString()}
-                    </div>
+                    <div className="text-sm">{new Date(destination.createdAt).toLocaleDateString()}</div>
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -141,6 +94,22 @@ export async function DestinationsTable({
                           <EllipsisVertical />
                         </Button>
                       </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuGroup>
+                          <DropdownMenuItem>
+                            Edit
+                            <DropdownMenuShortcut>
+                              <Edit />
+                            </DropdownMenuShortcut>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            Delete
+                            <DropdownMenuShortcut>
+                              <Trash />
+                            </DropdownMenuShortcut>
+                          </DropdownMenuItem>
+                        </DropdownMenuGroup>
+                      </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
                 </TableRow>
@@ -151,12 +120,7 @@ export async function DestinationsTable({
       </div>
 
       <div className="mt-4">
-        <TablePagination
-          currentPage={pagination.currentPage}
-          totalPages={pagination.totalPages}
-          totalItems={pagination.totalItems}
-          pageSize={pagination.pageSize}
-        />
+        <TablePagination currentPage={pagination.currentPage} totalPages={pagination.totalPages} totalItems={pagination.totalItems} pageSize={pagination.pageSize} />
       </div>
     </div>
   );
