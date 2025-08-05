@@ -2,7 +2,7 @@ import axios, { AxiosRequestConfig } from "axios";
 import { getCookie, setCookie, deleteCookie } from "cookies-next";
 
 const API_BASE_URL = "https://dewataksu-backend.vercel.app/api";
-const REFRESH_TOKEN_URL = "http://localhost:5050/api/token";
+const REFRESH_TOKEN_URL = "https://dewataksu-backend.vercel.app/api/token";
 
 interface FailedQueuePromise {
   resolve: (token: string) => void;
