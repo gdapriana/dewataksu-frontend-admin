@@ -7,7 +7,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { TablePagination } from "@/app/dashboard/destinations/_components/table-pagination";
+import { TablePagination } from "@/app/_components/table-pagination";
 import { MapPin, Heart, Bookmark, EllipsisVertical } from "lucide-react";
 import { DestinationRequest } from "@/lib/request/destination.request";
 import { DestinationType } from "@/lib/types";

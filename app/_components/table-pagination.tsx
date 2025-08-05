@@ -17,14 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-interface TablePaginationProps {
-  currentPage: number;
-  totalPages: number;
-  totalItems: number;
-  pageSize: number;
-  searchQuery?: string;
-}
+import { TablePaginationProps } from "@/lib/types";
 
 export function TablePagination({
   currentPage,
