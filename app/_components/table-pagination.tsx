@@ -1,30 +1,10 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { TablePaginationProps } from "@/lib/types";
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-export function TablePagination({
-  currentPage,
-  totalPages,
-  totalItems,
-  pageSize,
-}: TablePaginationProps) {
+export function TablePagination({ currentPage, totalPages, totalItems, pageSize }: { currentPage: number; totalPages: number; totalItems: number; pageSize: number; searchQuery?: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -46,11 +26,7 @@ export function TablePagination({
     const range = [];
     const rangeWithDots = [];
 
-    for (
-      let i = Math.max(2, currentPage - delta);
-      i <= Math.min(totalPages - 1, currentPage + delta);
-      i++
-    ) {
+    for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
       range.push(i);
     }
 
@@ -81,10 +57,7 @@ export function TablePagination({
         <p className="text-sm whitespace-pre-wrap line-clamp-1 text-muted-foreground">
           Showing {startItem} to {endItem} of {totalItems} results
         </p>
-        <Select
-          value={pageSize.toString()}
-          onValueChange={handlePageSizeChange}
-        >
+        <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
           <SelectTrigger className="h-8 w-20">
             <SelectValue />
           </SelectTrigger>
@@ -96,20 +69,13 @@ export function TablePagination({
             <SelectItem value="100">100</SelectItem>
           </SelectContent>
         </Select>
-        <p className="text-sm text-muted-foreground whitespace-nowrap">
-          per page
-        </p>
+        <p className="text-sm text-muted-foreground whitespace-nowrap">per page</p>
       </div>
 
       <Pagination>
         <PaginationContent>
           <PaginationItem>
-            <PaginationPrevious
-              href={currentPage > 1 ? createPageURL(currentPage - 1) : "#"}
-              className={
-                currentPage <= 1 ? "pointer-events-none opacity-50" : ""
-              }
-            />
+            <PaginationPrevious href={currentPage > 1 ? createPageURL(currentPage - 1) : "#"} className={currentPage <= 1 ? "pointer-events-none opacity-50" : ""} />
           </PaginationItem>
 
           {visiblePages.map((page, index) => (
@@ -117,10 +83,7 @@ export function TablePagination({
               {page === "..." ? (
                 <PaginationEllipsis />
               ) : (
-                <PaginationLink
-                  href={createPageURL(page as number)}
-                  isActive={currentPage === page}
-                >
+                <PaginationLink href={createPageURL(page as number)} isActive={currentPage === page}>
                   {page}
                 </PaginationLink>
               )}
@@ -128,16 +91,7 @@ export function TablePagination({
           ))}
 
           <PaginationItem>
-            <PaginationNext
-              href={
-                currentPage < totalPages ? createPageURL(currentPage + 1) : "#"
-              }
-              className={
-                currentPage >= totalPages
-                  ? "pointer-events-none opacity-50"
-                  : ""
-              }
-            />
+            <PaginationNext href={currentPage < totalPages ? createPageURL(currentPage + 1) : "#"} className={currentPage >= totalPages ? "pointer-events-none opacity-50" : ""} />
           </PaginationItem>
         </PaginationContent>
       </Pagination>

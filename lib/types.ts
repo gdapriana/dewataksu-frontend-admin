@@ -202,3 +202,17 @@ export interface PaginationType {
   totalItems: number;
   totalPages: number;
 }
+
+export interface TablePaginationProps {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  pageSize: number;
+  searchQuery?: string;
+}
+
+export interface DestinationsTableProps {
+  page: number;
+  pageSize: number;
+  title?: string;
+}
