@@ -1,8 +1,10 @@
 import axios, { AxiosRequestConfig } from "axios";
 import { getCookie, setCookie, deleteCookie } from "cookies-next";
 
-const API_BASE_URL = "https://dewataksu-backend.vercel.app/api";
-const REFRESH_TOKEN_URL = "https://dewataksu-backend.vercel.app/api/token";
+// const API_BASE_URL = "https://dewataksu-backend.vercel.app/api";
+// const REFRESH_TOKEN_URL = "https://dewataksu-backend.vercel.app/api/token";
+const API_BASE_URL = "http://localhost:5050/api";
+const REFRESH_TOKEN_URL = "https://localhost:5050/api/token";
 
 interface FailedQueuePromise {
   resolve: (token: string) => void;
@@ -79,9 +81,7 @@ axiosInstance.interceptors.response.use(
         const { accessToken: newAccessToken } = response.data;
         setAccessToken(newAccessToken);
         if (axiosInstance.defaults.headers.common) {
-          axiosInstance.defaults.headers.common[
-            "Authorization"
-          ] = `Bearer ${newAccessToken}`;
+          axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${newAccessToken}`;
         }
         if (originalRequest.headers) {
           originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;

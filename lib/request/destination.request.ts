@@ -1,4 +1,4 @@
-import { axiosPublic } from "@/lib/axios";
+import { axiosInstance, axiosPublic } from "@/lib/axios";
 
 export class DestinationRequest {
   static async GETS(page: number, pageSize: number, title?: string) {
@@ -12,9 +12,16 @@ export class DestinationRequest {
         params.set("title", title);
       }
 
-      const response = await axiosPublic.get(
-        `/destinations?${params.toString()}`
-      );
+      const response = await axiosPublic.get(`/destinations?${params.toString()}`);
+      return response.data.result;
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  static async DELETE(id: string) {
+    try {
+      const response = await axiosInstance.delete(`/destinations/${id}`);
       return response.data.result;
     } catch (e) {
       console.error(e);

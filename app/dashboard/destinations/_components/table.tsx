@@ -7,6 +7,7 @@ import { DestinationsTableProps, DestinationType, PaginationType } from "@/lib/t
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuShortcut, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import DeleteAlert from "@/app/_components/delete-alert";
 
 export async function DestinationsTable({ page, pageSize }: DestinationsTableProps) {
   const data: { data: DestinationType[]; pagination: PaginationType } = await DestinationRequest.GETS(page, pageSize);
@@ -102,12 +103,7 @@ export async function DestinationsTable({ page, pageSize }: DestinationsTablePro
                               <Edit />
                             </DropdownMenuShortcut>
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            Delete
-                            <DropdownMenuShortcut>
-                              <Trash />
-                            </DropdownMenuShortcut>
-                          </DropdownMenuItem>
+                          <DeleteAlert title={destination.title} instance="destinations" id={destination.id} />
                         </DropdownMenuGroup>
                       </DropdownMenuContent>
                     </DropdownMenu>
