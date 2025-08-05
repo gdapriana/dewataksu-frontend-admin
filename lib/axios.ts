@@ -77,8 +77,8 @@ axiosInstance.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const response = await axiosInstance.post(REFRESH_TOKEN_URL);
-        const { accessToken: newAccessToken } = response.data;
+        const response = await axiosInstance.get(REFRESH_TOKEN_URL);
+        const { accessToken: newAccessToken } = response.data.data;
         setAccessToken(newAccessToken);
         if (axiosInstance.defaults.headers.common) {
           axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${newAccessToken}`;
@@ -105,6 +105,7 @@ axiosInstance.interceptors.response.use(
 
 const axiosPublic = axios.create({
   baseURL: API_BASE_URL,
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },

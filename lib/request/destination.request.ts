@@ -19,6 +19,14 @@ export class DestinationRequest {
     }
   }
 
+  static async POST(data: any) {
+    try {
+      await axiosInstance.post("/destinations", data);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
   static async DELETE(id: string) {
     try {
       const response = await axiosInstance.delete(`/destinations/${id}`);
