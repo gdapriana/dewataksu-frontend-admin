@@ -8,9 +8,19 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { TablePagination } from "@/app/dashboard/destinations/_components/table-pagination";
-import { MapPin, Heart, Bookmark } from "lucide-react";
+import { MapPin, Heart, Bookmark, EllipsisVertical } from "lucide-react";
 import { DestinationRequest } from "@/lib/request/destination.request";
 import { DestinationType } from "@/lib/types";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface DestinationsTableProps {
   page: number;
@@ -38,6 +48,7 @@ export async function DestinationsTable({
               <TableHead>Price</TableHead>
               <TableHead>Engagement</TableHead>
               <TableHead>Created</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -55,9 +66,16 @@ export async function DestinationsTable({
                   <TableCell>
                     <div>
                       <div className="font-medium">{destination.title}</div>
-                      <div className="text-sm text-muted-foreground line-clamp-1 whitespace-pre-wrap">
-                        {destination.content}
-                      </div>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="text-sm text-muted-foreground line-clamp-1 whitespace-pre-wrap">
+                            {destination.content}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-[400px]">
+                          {destination.content}
+                        </TooltipContent>
+                      </Tooltip>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -66,9 +84,15 @@ export async function DestinationsTable({
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-1">
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">{destination.address}</span>
+                    <div className="flex justify-start items-center gap-1">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="text-sm whitespace-pre-wrap line-clamp-1">
+                            {destination.address}
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>{destination.address}</TooltipContent>
+                      </Tooltip>
                     </div>
                   </TableCell>
                   <TableCell>
@@ -109,6 +133,15 @@ export async function DestinationsTable({
                     <div className="text-sm">
                       {new Date(destination.createdAt).toLocaleDateString()}
                     </div>
+                  </TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <EllipsisVertical />
+                        </Button>
+                      </DropdownMenuTrigger>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))

@@ -14,7 +14,7 @@ export default async function Page({
 }) {
   const resolvedSearchParams = await searchParams;
   const page = Number(resolvedSearchParams.page) || 1;
-  const pageSize = Number(resolvedSearchParams.pageSize) || 10;
+  const pageSize = Number(resolvedSearchParams.pageSize) || 7;
 
   return (
     <>
