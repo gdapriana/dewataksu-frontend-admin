@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Upload, X } from "lucide-react";
 
-import { CategoryType } from "@/lib/types";
+import { CategoryType, DestinationType, TagType } from "@/lib/types";
 import { DestinationRequest } from "@/lib/request/destination.request";
 import { Badge } from "@/components/ui/badge";
 import { axiosInstance } from "@/lib/axios";
@@ -60,7 +60,7 @@ const validation = z.object({
 
 type FormValues = z.infer<typeof validation>;
 
-export function CreateDestinationForm({ categories }: { categories: CategoryType[] }) {
+export function UpdateDestinationForm({ oldDestination, categories }: { oldDestination: DestinationType; categories: CategoryType[] }) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [tags, setTags] = useState<string[]>([]);
@@ -68,17 +68,21 @@ export function CreateDestinationForm({ categories }: { categories: CategoryType
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
 
+  useEffect(() => {
+    if (oldDestination.cover?.url) setImagePreview(oldDestination.cover.url);
+  }, [oldDestination]);
+
   const form = useForm<FormValues>({
     resolver: zodResolver(validation),
     defaultValues: {
-      title: "",
-      content: "",
-      address: "",
+      title: oldDestination.title,
+      content: oldDestination.content,
+      address: oldDestination.address,
       mapUrl: "",
-      latitude: "",
-      longitude: "",
-      categoryId: "",
-      price: "",
+      latitude: oldDestination.latitude?.toString(),
+      longitude: oldDestination.longitude?.toString(),
+      categoryId: oldDestination.categoryId,
+      price: oldDestination.price?.toString(),
       tags: [],
       cover: { url: null, publicId: null },
     },
@@ -252,7 +256,7 @@ export function CreateDestinationForm({ categories }: { categories: CategoryType
                   <FormItem>
                     <FormLabel>Category</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
+                      <FormControl className="w-full">
                         <SelectTrigger>
                           <SelectValue placeholder="Select a category" />
                         </SelectTrigger>

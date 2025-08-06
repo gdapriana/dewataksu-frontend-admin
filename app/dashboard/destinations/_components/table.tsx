@@ -1,13 +1,15 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { TablePagination } from "@/app/_components/table-pagination";
-import { Heart, Bookmark, EllipsisVertical, Text, Trash, Edit } from "lucide-react";
+import { Heart, Bookmark, EllipsisVertical, Text, Trash, Edit, ImageOff } from "lucide-react";
 import { DestinationRequest } from "@/lib/request/destination.request";
 import { DestinationsTableProps, DestinationType, PaginationType } from "@/lib/types";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuShortcut, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import DeleteAlert from "@/app/_components/delete-alert";
+import Image from "next/image";
+import Link from "next/link";
 
 export async function DestinationsTable({ page, pageSize }: DestinationsTableProps) {
   const data: { data: DestinationType[]; pagination: PaginationType } = await DestinationRequest.GETS(page, pageSize);
@@ -20,6 +22,7 @@ export async function DestinationsTable({ page, pageSize }: DestinationsTablePro
           <TableHeader>
             <TableRow>
               <TableHead>Title</TableHead>
+              <TableHead>Cover</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Location</TableHead>
               <TableHead>Tags</TableHead>
@@ -49,6 +52,26 @@ export async function DestinationsTable({ page, pageSize }: DestinationsTablePro
                         <TooltipContent className="max-w-[400px]">{destination.content}</TooltipContent>
                       </Tooltip>
                     </div>
+                  </TableCell>
+                  <TableCell>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        {destination.cover && destination.cover.url ? (
+                          <Image width={1080} className="w-[40px] aspect-video object-cover" height={768} src={destination.cover.url} alt="cover" />
+                        ) : (
+                          <Button variant="ghost">
+                            <ImageOff className="w-4 h-4 text-muted-foreground" />
+                          </Button>
+                        )}
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {destination.cover && destination.cover.url ? (
+                          <Image width={1080} className="w-[400px] aspect-video object-cover" height={768} src={destination.cover.url} alt="cover" />
+                        ) : (
+                          "No Image Provided"
+                        )}
+                      </TooltipContent>
+                    </Tooltip>
                   </TableCell>
                   <TableCell>
                     <Badge variant="secondary">{destination.category.name}</Badge>
@@ -97,11 +120,13 @@ export async function DestinationsTable({ page, pageSize }: DestinationsTablePro
                       </DropdownMenuTrigger>
                       <DropdownMenuContent>
                         <DropdownMenuGroup>
-                          <DropdownMenuItem>
-                            Edit
-                            <DropdownMenuShortcut>
-                              <Edit />
-                            </DropdownMenuShortcut>
+                          <DropdownMenuItem asChild>
+                            <Link href={`/dashboard/destinations/${destination.slug}`}>
+                              Edit
+                              <DropdownMenuShortcut>
+                                <Edit />
+                              </DropdownMenuShortcut>
+                            </Link>
                           </DropdownMenuItem>
                           <DeleteAlert title={destination.title} instance="destinations" id={destination.id} />
                         </DropdownMenuGroup>
