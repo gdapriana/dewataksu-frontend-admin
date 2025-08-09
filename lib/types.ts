@@ -82,6 +82,7 @@ export type DestinationType = {
   cover: ImageType | null;
   price: number | null;
   categoryId: string;
+  mapUrl: string | null;
   category: CategoryType;
   tags: TagType[];
   galleries: GalleryType[];

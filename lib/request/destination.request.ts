@@ -1,4 +1,5 @@
 import { axiosInstance, axiosPublic } from "@/lib/axios";
+import { DestinationType } from "@/lib/types";
 
 export class DestinationRequest {
   static async GET(slug: string) {

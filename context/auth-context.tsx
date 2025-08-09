@@ -1,15 +1,10 @@
 "use client";
 
-import React, {
-  createContext,
-  useState,
-  useContext,
-  useEffect,
-  ReactNode,
-} from "react";
+import React, { createContext, useState, useContext, useEffect, ReactNode } from "react";
 import { getCookie, setCookie, deleteCookie } from "cookies-next";
 import { axiosInstance } from "@/lib/axios";
 import { toast } from "sonner";
+import { UserType } from "@/lib/types";
 
 enum Role {
   USER = "USER",
@@ -24,23 +19,8 @@ type ImageType = {
   updatedAt: Date;
 };
 
-type User = {
-  id: string;
-  email: string;
-  username: string;
-  name: string | null;
-  password?: string | null;
-  bio: string | null;
-  refreshToken?: string | null;
-  role: Role;
-  profileImageId: string | null;
-  profileImage: ImageType | null;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
 interface AuthContextType {
-  user: User | null;
+  user: UserType | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (accessToken: string) => Promise<void>;
@@ -56,15 +36,24 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 const setAccessTokenCookie = (accessToken: string) => {
-  setCookie("accessToken", accessToken, { path: "/" });
+  setCookie("accessToken", accessToken, {
+    path: "/",
+    maxAge: 60 * 15,
+    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production",
+  });
 };
 
 const clearAccessTokenCookie = () => {
   deleteCookie("accessToken", { path: "/" });
 };
 
+const clearRefreshTokenCookie = () => {
+  deleteCookie("refreshToken", { path: "/" });
+};
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -77,16 +66,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       try {
-        const response = await axiosInstance.get("/me");
+        const response = await axiosInstance.get("/me", {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
         setUser(response.data.data);
       } catch (error) {
-        console.error("Gagal memvalidasi sesi:", error);
-        setUser(null);
+        console.error("Failed to validate session:", error);
         clearAccessTokenCookie();
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
     };
+
     validateUserSession();
   }, []);
 
@@ -94,15 +88,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsLoading(true);
     try {
       setAccessTokenCookie(accessToken);
-      const response = await axiosInstance.get("/me");
-      if (response.data.data.role !== "ADMIN") {
-        toast.error("wrong username or password");
+
+      const response = await axiosInstance.get("/me", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (response.data.data.role !== Role.ADMIN) {
+        toast.error("Wrong username or password");
+        clearAccessTokenCookie();
         return;
       }
+
       setUser(response.data.data);
     } catch (error) {
-      console.error("login failed:", error);
+      console.error("Login failed:", error);
       clearAccessTokenCookie();
+      clearRefreshTokenCookie();
       setUser(null);
       throw error;
     } finally {
@@ -112,11 +115,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = async () => {
     try {
-      await axiosInstance.post("/auth/logout");
+      await axiosInstance.delete("/logout");
     } catch (error) {
-      console.error("something wrong", error);
+      console.error("Logout error:", error);
     } finally {
       clearAccessTokenCookie();
+      clearRefreshTokenCookie();
       setUser(null);
       if (typeof window !== "undefined") {
         window.location.href = "/login";
@@ -125,14 +129,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const isAuthenticated = !!user;
-  const value = { user, isAuthenticated, isLoading, login, logout };
+
+  const value: AuthContextType = {
+    user,
+    isAuthenticated,
+    isLoading,
+    login,
+    logout,
+  };
+
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth harus digunakan di dalam AuthProvider");
+    throw new Error("useAuth must be used within AuthProvider");
   }
   return context;
 };

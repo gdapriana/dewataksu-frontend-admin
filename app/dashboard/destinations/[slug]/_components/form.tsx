@@ -22,32 +22,41 @@ import { axiosInstance } from "@/lib/axios";
 import Link from "next/link";
 
 const validation = z.object({
-  title: z.string().min(1).max(200),
+  title: z.string().min(1).max(200).optional(),
   content: z.string().optional().nullable(),
   address: z.string().optional().nullable(),
   mapUrl: z.string().url().optional().nullable(),
-  latitude: z.string().refine(
-    (v) => {
-      let n = Number(v);
-      return !isNaN(n) && v?.length > 0;
-    },
-    { message: "invalid number" }
-  ),
-  longitude: z.string().refine(
-    (v) => {
-      let n = Number(v);
-      return !isNaN(n) && v?.length > 0;
-    },
-    { message: "invalid number" }
-  ),
-  categoryId: z.string().cuid({ message: "invalid category id" }),
-  price: z.string().refine(
-    (v) => {
-      let n = Number(v);
-      return !isNaN(n) && v?.length > 0;
-    },
-    { message: "invalid number" }
-  ),
+  latitude: z
+    .string()
+    .refine(
+      (v) => {
+        let n = Number(v);
+        return !isNaN(n) && v?.length > 0;
+      },
+      { message: "invalid number" }
+    )
+    .optional(),
+  longitude: z
+    .string()
+    .refine(
+      (v) => {
+        let n = Number(v);
+        return !isNaN(n) && v?.length > 0;
+      },
+      { message: "invalid number" }
+    )
+    .optional(),
+  categoryId: z.string().cuid({ message: "invalid category id" }).optional(),
+  price: z
+    .string()
+    .refine(
+      (v) => {
+        let n = Number(v);
+        return !isNaN(n) && v?.length > 0;
+      },
+      { message: "invalid number" }
+    )
+    .optional(),
   tags: z.array(z.string().min(1)).optional(),
   cover: z
     .object({
@@ -63,7 +72,7 @@ type FormValues = z.infer<typeof validation>;
 export function UpdateDestinationForm({ oldDestination, categories }: { oldDestination: DestinationType; categories: CategoryType[] }) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [tags, setTags] = useState<string[]>([]);
+  const [tags, setTags] = useState<string[]>(oldDestination?.tags?.map((t) => t.name) || []);
   const [tagInput, setTagInput] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -75,16 +84,16 @@ export function UpdateDestinationForm({ oldDestination, categories }: { oldDesti
   const form = useForm<FormValues>({
     resolver: zodResolver(validation),
     defaultValues: {
-      title: oldDestination.title,
-      content: oldDestination.content,
-      address: oldDestination.address,
-      mapUrl: "",
-      latitude: oldDestination.latitude?.toString(),
-      longitude: oldDestination.longitude?.toString(),
-      categoryId: oldDestination.categoryId,
-      price: oldDestination.price?.toString(),
-      tags: [],
-      cover: { url: null, publicId: null },
+      title: oldDestination?.title || "",
+      content: oldDestination?.content || "",
+      address: oldDestination?.address || "",
+      mapUrl: oldDestination?.mapUrl || "",
+      latitude: String(oldDestination?.latitude || ""),
+      longitude: String(oldDestination?.longitude || ""),
+      categoryId: oldDestination?.categoryId || "",
+      price: String(oldDestination?.price || ""),
+      tags: oldDestination?.tags?.map((t) => t.name) || [],
+      cover: oldDestination?.cover || { url: null, publicId: null },
     },
   });
 
@@ -117,7 +126,7 @@ export function UpdateDestinationForm({ oldDestination, categories }: { oldDesti
 
   async function onSubmit(values: FormValues) {
     setIsSubmitting(true);
-    let coverData = null;
+    let coverData = oldDestination?.cover || null;
     if (imageFile) {
       const formData = new FormData();
       formData.append("image", imageFile);
@@ -136,18 +145,26 @@ export function UpdateDestinationForm({ oldDestination, categories }: { oldDesti
       ...values,
       cover: coverData,
       tags: tags,
-      price: Number(values.price) || 0,
-      latitude: Number(values.latitude) || null,
-      longitude: Number(values.longitude) || null,
+      price: Number(values.price) || undefined,
+      latitude: Number(values.latitude) || undefined,
+      longitude: Number(values.longitude) || undefined,
     };
 
-    toast.promise(DestinationRequest.POST(finalData), {
-      loading: "Creating destination...",
+    if (oldDestination.title === finalData.title) finalData.title = undefined;
+    if (oldDestination.address === finalData.address) finalData.address = undefined;
+    if (oldDestination.categoryId === finalData.categoryId) finalData.categoryId = undefined;
+    if (oldDestination.content === finalData.content) finalData.content = undefined;
+    if (oldDestination.price === finalData.price) finalData.price = undefined;
+    if (oldDestination.latitude === finalData.latitude) finalData.latitude = undefined;
+    if (oldDestination.longitude === finalData.longitude) finalData.longitude = undefined;
+
+    toast.promise(DestinationRequest.PATCH(oldDestination.id, finalData), {
+      loading: "Updating destination...",
       success: () => {
         router.push("/dashboard/destinations");
-        return "Destination created successfully!";
+        return "Destination update successfully!";
       },
-      error: "Failed to create destination. Please check your input.",
+      error: "Failed to update destination. Please check your input.",
       finally: () => setIsSubmitting(false),
     });
   }
@@ -353,7 +370,7 @@ export function UpdateDestinationForm({ oldDestination, categories }: { oldDesti
             </Button>
             <Button type="submit" className="flex-1" disabled={isSubmitting}>
               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isSubmitting ? "Creating..." : "Create Destination"}
+              {isSubmitting ? "Updating..." : "Update Destination"}
             </Button>
           </div>
         </div>

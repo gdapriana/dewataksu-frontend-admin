@@ -2,12 +2,7 @@ import { CreateDestinationForm } from "@/app/dashboard/destinations/create/_comp
 import { FormSkeleton } from "@/app/dashboard/destinations/create/_components/form-skeleton";
 import { SiteHeader } from "@/components/site-header";
 import { CategoryRequest } from "@/lib/request/category.request";
-import { CategoryType } from "@/lib/types";
 import { Suspense } from "react";
-
-type CategoryData = {
-  result: CategoryType[];
-};
 
 const pageConfig = {
   title: "Create Destinations",

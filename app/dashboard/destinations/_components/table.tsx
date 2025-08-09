@@ -65,11 +65,7 @@ export async function DestinationsTable({ page, pageSize }: DestinationsTablePro
                         )}
                       </TooltipTrigger>
                       <TooltipContent>
-                        {destination.cover && destination.cover.url ? (
-                          <Image width={1080} className="w-[400px] aspect-video object-cover" height={768} src={destination.cover.url} alt="cover" />
-                        ) : (
-                          "No Image Provided"
-                        )}
+                        {destination.cover && destination.cover.url ? <Image width={1080} className="w-[400px]" height={768} src={destination.cover.url} alt="cover" /> : "No Image Provided"}
                       </TooltipContent>
                     </Tooltip>
                   </TableCell>

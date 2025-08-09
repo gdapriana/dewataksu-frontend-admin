@@ -20,6 +20,7 @@ import { DestinationRequest } from "@/lib/request/destination.request";
 import { Badge } from "@/components/ui/badge";
 import { axiosInstance } from "@/lib/axios";
 import Link from "next/link";
+import { GalleryDropzone, PreviewFile } from "@/app/dashboard/destinations/create/_components/gallery-dropzone";
 
 const validation = z.object({
   title: z.string().min(1).max(200),
@@ -67,6 +68,7 @@ export function CreateDestinationForm({ categories }: { categories: CategoryType
   const [tagInput, setTagInput] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [galleryFiles, setGalleryFiles] = useState<PreviewFile[]>([]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(validation),
@@ -114,6 +116,15 @@ export function CreateDestinationForm({ categories }: { categories: CategoryType
   async function onSubmit(values: FormValues) {
     setIsSubmitting(true);
     let coverData = null;
+
+    let galleryData = [];
+    if (galleryFiles.length > 0) {
+      const galleryFormData = new FormData();
+      galleryFiles.forEach((file) => galleryFormData.append("images", file));
+      const galleryRes = await axiosInstance.post("/bulk-upload", galleryFormData);
+      galleryData = galleryRes.data.result;
+    }
+
     if (imageFile) {
       const formData = new FormData();
       formData.append("image", imageFile);
@@ -340,6 +351,14 @@ export function CreateDestinationForm({ categories }: { categories: CategoryType
                 ))}
               </div>
               <Input placeholder="Add tags and press Enter" value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={handleTagInputKeyDown} />
+            </CardContent>
+          </Card>
+          <Card className="shadow-none md:col-span-3">
+            <CardHeader>
+              <CardTitle>Gallery Images</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <GalleryDropzone files={galleryFiles} setFiles={setGalleryFiles} />
             </CardContent>
           </Card>
 

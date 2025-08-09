@@ -1,24 +1,28 @@
 import axios, { AxiosRequestConfig } from "axios";
 import { getCookie, setCookie, deleteCookie } from "cookies-next";
 
-const API_BASE_URL = "https://dewataksu-backend.vercel.app/api";
-const REFRESH_TOKEN_URL = "https://dewataksu-backend.vercel.app/api/token";
-// const API_BASE_URL = "http://localhost:5050/api";
-// const REFRESH_TOKEN_URL = "https://localhost:5050/api/token";
+const API_BASE_URL = process.env.NODE_ENV === "production" ? "https://dewataksu-backend.vercel.app/api" : "http://localhost:5050/api";
+const REFRESH_TOKEN_URL = process.env.NODE_ENV === "production" ? "https://dewataksu-backend.vercel.app/api/token" : "http://localhost:5050/api/token";
 
 interface FailedQueuePromise {
   resolve: (token: string) => void;
   reject: (error: any) => void;
 }
 
-const getAccessToken = () => getCookie("accessToken");
+const getAccessToken = () => getCookie("accessToken") as string | undefined;
 
 const setAccessToken = (accessToken: string) => {
-  setCookie("accessToken", accessToken, { path: "/" });
+  setCookie("accessToken", accessToken, {
+    path: "/",
+    maxAge: 60 * 15,
+    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production",
+  });
 };
 
 const clearClientTokens = () => {
   deleteCookie("accessToken", { path: "/" });
+  deleteCookie("refreshToken", { path: "/" });
 };
 
 const axiosInstance = axios.create({
@@ -31,9 +35,10 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
   (config) => {
-    const accessToken = getAccessToken();
-    if (accessToken) {
-      config.headers["Authorization"] = `Bearer ${accessToken}`;
+    const token = getAccessToken();
+    if (token) {
+      config.headers = config.headers || {};
+      config.headers["Authorization"] = `Bearer ${token}`;
     }
     return config;
   },
@@ -57,11 +62,9 @@ const processQueue = (error: any, token: string | null = null) => {
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error: any) => {
-    const originalRequest = error.config as AxiosRequestConfig & {
-      _retry?: boolean;
-    };
+    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 403 && !originalRequest._retry) {
       if (isRefreshing) {
         return new Promise<string>((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -77,15 +80,24 @@ axiosInstance.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const response = await axiosInstance.get(REFRESH_TOKEN_URL);
-        const { accessToken: newAccessToken } = response.data.data;
+        // Refresh token request
+        const refreshResp = await axios.get(REFRESH_TOKEN_URL, {
+          withCredentials: true, // send refresh token cookie
+        });
+        const newAccessToken = refreshResp.data?.data?.newAccessToken;
+        if (!newAccessToken) throw new Error("No access token in refresh response");
+
+        // Save to cookie
         setAccessToken(newAccessToken);
+
+        // Update default headers
         if (axiosInstance.defaults.headers.common) {
           axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${newAccessToken}`;
         }
         if (originalRequest.headers) {
           originalRequest.headers["Authorization"] = `Bearer ${newAccessToken}`;
         }
+
         processQueue(null, newAccessToken);
         return axiosInstance(originalRequest);
       } catch (refreshError) {
@@ -99,6 +111,7 @@ axiosInstance.interceptors.response.use(
         isRefreshing = false;
       }
     }
+
     return Promise.reject(error);
   }
 );
