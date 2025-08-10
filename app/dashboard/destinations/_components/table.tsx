@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { TablePagination } from "@/app/_components/table-pagination";
 import { Heart, Bookmark, EllipsisVertical, Text, Trash, Edit, ImageOff } from "lucide-react";
 import { DestinationRequest } from "@/lib/request/destination.request";
-import { DestinationsTableProps, DestinationType, PaginationType } from "@/lib/types";
+import { TableProps, DestinationType, PaginationType } from "@/lib/types";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuShortcut, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -11,7 +11,7 @@ import DeleteAlert from "@/app/_components/delete-alert";
 import Image from "next/image";
 import Link from "next/link";
 
-export async function DestinationsTable({ page, pageSize }: DestinationsTableProps) {
+export async function DestinationsTable({ page, pageSize }: TableProps) {
   const data: { data: DestinationType[]; pagination: PaginationType } = await DestinationRequest.GETS(page, pageSize);
   const { data: destinations, pagination } = data;
 

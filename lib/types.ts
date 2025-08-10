@@ -212,7 +212,7 @@ export interface TablePaginationProps {
   searchQuery?: string;
 }
 
-export interface DestinationsTableProps {
+export interface TableProps {
   page: number;
   pageSize: number;
   title?: string;

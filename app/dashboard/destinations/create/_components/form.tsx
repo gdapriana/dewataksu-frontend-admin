@@ -6,7 +6,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -16,50 +15,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Upload, X } from "lucide-react";
 
 import { CategoryType } from "@/lib/types";
-import { DestinationRequest } from "@/lib/request/destination.request";
+import { DestinationGalleryRequest, DestinationRequest } from "@/lib/request/destination.request";
 import { Badge } from "@/components/ui/badge";
 import { axiosInstance } from "@/lib/axios";
 import Link from "next/link";
-import { GalleryDropzone, PreviewFile } from "@/app/dashboard/destinations/create/_components/gallery-dropzone";
+import { PreviewFile } from "@/app/dashboard/destinations/create/_components/gallery-dropzone";
+import { DestinationFormValidation } from "@/lib/validation/destination.validation";
 
-const validation = z.object({
-  title: z.string().min(1).max(200),
-  content: z.string().optional().nullable(),
-  address: z.string().optional().nullable(),
-  mapUrl: z.string().url().optional().nullable(),
-  latitude: z.string().refine(
-    (v) => {
-      let n = Number(v);
-      return !isNaN(n) && v?.length > 0;
-    },
-    { message: "invalid number" }
-  ),
-  longitude: z.string().refine(
-    (v) => {
-      let n = Number(v);
-      return !isNaN(n) && v?.length > 0;
-    },
-    { message: "invalid number" }
-  ),
-  categoryId: z.string().cuid({ message: "invalid category id" }),
-  price: z.string().refine(
-    (v) => {
-      let n = Number(v);
-      return !isNaN(n) && v?.length > 0;
-    },
-    { message: "invalid number" }
-  ),
-  tags: z.array(z.string().min(1)).optional(),
-  cover: z
-    .object({
-      url: z.string().url().nullable(),
-      publicId: z.string().nullable().optional(),
-    })
-    .nullable()
-    .optional(),
-});
-
-type FormValues = z.infer<typeof validation>;
+type FormValues = z.infer<typeof DestinationFormValidation.POST>;
 
 export function CreateDestinationForm({ categories }: { categories: CategoryType[] }) {
   const router = useRouter();
@@ -71,7 +34,7 @@ export function CreateDestinationForm({ categories }: { categories: CategoryType
   const [galleryFiles, setGalleryFiles] = useState<PreviewFile[]>([]);
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(validation),
+    resolver: zodResolver(DestinationFormValidation.POST),
     defaultValues: {
       title: "",
       content: "",
@@ -121,7 +84,7 @@ export function CreateDestinationForm({ categories }: { categories: CategoryType
     if (galleryFiles.length > 0) {
       const galleryFormData = new FormData();
       galleryFiles.forEach((file) => galleryFormData.append("images", file));
-      const galleryRes = await axiosInstance.post("/bulk-upload", galleryFormData);
+      const galleryRes = await axiosInstance.post("/bulk-upload", galleryFormData, { headers: { "Content-Type": "multipart/form-data" } });
       galleryData = galleryRes.data.result;
     }
 
@@ -150,7 +113,8 @@ export function CreateDestinationForm({ categories }: { categories: CategoryType
 
     toast.promise(DestinationRequest.POST(finalData), {
       loading: "Creating destination...",
-      success: () => {
+      success: async (id) => {
+        // if (galleryData && galleryData.length > 0) await DestinationGalleryRequest.POST(galleryData, id);
         router.push("/dashboard/destinations");
         return "Destination created successfully!";
       },
@@ -169,6 +133,7 @@ export function CreateDestinationForm({ categories }: { categories: CategoryType
             </CardHeader>
             <CardContent className="space-y-4 flex flex-1 flex-col justify-start items-stretch">
               <FormField
+                disabled={isSubmitting}
                 control={form.control}
                 name="title"
                 render={({ field }) => (
@@ -183,6 +148,7 @@ export function CreateDestinationForm({ categories }: { categories: CategoryType
               />
               <FormField
                 control={form.control}
+                disabled={isSubmitting}
                 name="content"
                 render={({ field }) => (
                   <FormItem className="flex-1 flex flex-col justify-start items-stretch">
@@ -197,6 +163,7 @@ export function CreateDestinationForm({ categories }: { categories: CategoryType
               <FormField
                 control={form.control}
                 name="address"
+                disabled={isSubmitting}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Address</FormLabel>
@@ -209,6 +176,7 @@ export function CreateDestinationForm({ categories }: { categories: CategoryType
               />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
+                  disabled={isSubmitting}
                   control={form.control}
                   name="latitude"
                   render={({ field }) => (
@@ -223,6 +191,7 @@ export function CreateDestinationForm({ categories }: { categories: CategoryType
                 />
                 <FormField
                   control={form.control}
+                  disabled={isSubmitting}
                   name="longitude"
                   render={({ field }) => (
                     <FormItem>
@@ -236,6 +205,7 @@ export function CreateDestinationForm({ categories }: { categories: CategoryType
                 />
               </div>
               <FormField
+                disabled={isSubmitting}
                 control={form.control}
                 name="mapUrl"
                 render={({ field }) => (
@@ -257,6 +227,7 @@ export function CreateDestinationForm({ categories }: { categories: CategoryType
             </CardHeader>
             <CardContent className="space-y-4">
               <FormField
+                disabled={isSubmitting}
                 control={form.control}
                 name="categoryId"
                 render={({ field }) => (
@@ -283,6 +254,7 @@ export function CreateDestinationForm({ categories }: { categories: CategoryType
               <FormField
                 control={form.control}
                 name="price"
+                disabled={isSubmitting}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Price (IDR)</FormLabel>
@@ -303,7 +275,7 @@ export function CreateDestinationForm({ categories }: { categories: CategoryType
             <CardContent>
               {!imagePreview ? (
                 <div className="relative">
-                  <Input type="file" accept="image/*" onChange={handleImageChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                  <Input disabled={isSubmitting} type="file" accept="image/*" onChange={handleImageChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
                   <div className="border-2 border-dashed border-muted-foreground/20 rounded-md p-8 text-center transition-all duration-200 cursor-pointer">
                     <div className="p-4 bg-muted-foreground/5 rounded-full w-fit mx-auto mb-4">
                       <Upload className="h-4 w-4 text-muted-foreground" />
@@ -344,26 +316,26 @@ export function CreateDestinationForm({ categories }: { categories: CategoryType
                 {tags.map((tag) => (
                   <Badge key={tag} variant="secondary" className="flex items-center gap-1">
                     {tag}
-                    <button onClick={() => removeTag(tag)}>
+                    <button disabled={isSubmitting} onClick={() => removeTag(tag)}>
                       <X className="h-3 w-3" />
                     </button>
                   </Badge>
                 ))}
               </div>
-              <Input placeholder="Add tags and press Enter" value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={handleTagInputKeyDown} />
+              <Input disabled={isSubmitting} placeholder="Add tags and press Enter" value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={handleTagInputKeyDown} />
             </CardContent>
           </Card>
-          <Card className="shadow-none md:col-span-3">
+          {/* <Card className="shadow-none md:col-span-3">
             <CardHeader>
               <CardTitle>Gallery Images</CardTitle>
             </CardHeader>
             <CardContent>
               <GalleryDropzone files={galleryFiles} setFiles={setGalleryFiles} />
             </CardContent>
-          </Card>
+          </Card> */}
 
-          <div className="flex justify-end gap-2">
-            <Button className="flex-1" variant="secondary" asChild>
+          <div className="flex col-span-1 md:col-span-3 justify-end gap-2">
+            <Button disabled={isSubmitting} className="flex-1" variant="secondary" asChild>
               <Link href="/dashboard/destinations">Cancel</Link>
             </Button>
             <Button type="submit" className="flex-1" disabled={isSubmitting}>

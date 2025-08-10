@@ -13,61 +13,18 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Upload, X } from "lucide-react";
+import { Loader2, Trash2, Upload, X } from "lucide-react";
 
-import { CategoryType, DestinationType, TagType } from "@/lib/types";
+import { CategoryType, DestinationType, ImageType, TagType } from "@/lib/types";
 import { DestinationRequest } from "@/lib/request/destination.request";
 import { Badge } from "@/components/ui/badge";
 import { axiosInstance } from "@/lib/axios";
 import Link from "next/link";
+import { DestinationFormValidation } from "@/lib/validation/destination.validation";
+// import { PreviewFile } from "@/app/dashboard/destinations/create/_components/gallery-dropzone";
+// import { GalleryDropzone } from "@/app/dashboard/destinations/[slug]/_components/gallery-dropzone";
 
-const validation = z.object({
-  title: z.string().min(1).max(200).optional(),
-  content: z.string().optional().nullable(),
-  address: z.string().optional().nullable(),
-  mapUrl: z.string().url().optional().nullable(),
-  latitude: z
-    .string()
-    .refine(
-      (v) => {
-        let n = Number(v);
-        return !isNaN(n) && v?.length > 0;
-      },
-      { message: "invalid number" }
-    )
-    .optional(),
-  longitude: z
-    .string()
-    .refine(
-      (v) => {
-        let n = Number(v);
-        return !isNaN(n) && v?.length > 0;
-      },
-      { message: "invalid number" }
-    )
-    .optional(),
-  categoryId: z.string().cuid({ message: "invalid category id" }).optional(),
-  price: z
-    .string()
-    .refine(
-      (v) => {
-        let n = Number(v);
-        return !isNaN(n) && v?.length > 0;
-      },
-      { message: "invalid number" }
-    )
-    .optional(),
-  tags: z.array(z.string().min(1)).optional(),
-  cover: z
-    .object({
-      url: z.string().url().nullable(),
-      publicId: z.string().nullable().optional(),
-    })
-    .nullable()
-    .optional(),
-});
-
-type FormValues = z.infer<typeof validation>;
+type FormValues = z.infer<typeof DestinationFormValidation.PATCH>;
 
 export function UpdateDestinationForm({ oldDestination, categories }: { oldDestination: DestinationType; categories: CategoryType[] }) {
   const router = useRouter();
@@ -76,13 +33,15 @@ export function UpdateDestinationForm({ oldDestination, categories }: { oldDesti
   const [tagInput, setTagInput] = useState("");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
-
+  // const [existingGallery, setExistingGallery] = useState<ImageType[]>(oldDestination.galleries?.map((g) => g.image as ImageType) || []);
+  // const [galleryFiles, setGalleryFiles] = useState<PreviewFile[]>([]);
+  // const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
   useEffect(() => {
     if (oldDestination.cover?.url) setImagePreview(oldDestination.cover.url);
   }, [oldDestination]);
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(validation),
+    resolver: zodResolver(DestinationFormValidation.PATCH),
     defaultValues: {
       title: oldDestination?.title || "",
       content: oldDestination?.content || "",
@@ -124,6 +83,11 @@ export function UpdateDestinationForm({ oldDestination, categories }: { oldDesti
     form.setValue("tags", newTags);
   };
 
+  // const handleRemoveExistingImage = (imageId: string) => {
+  //   setExistingGallery((prev) => prev.filter((img) => img.id !== imageId));
+  //   setImagesToDelete((prev) => [...prev, imageId]);
+  // };
+
   async function onSubmit(values: FormValues) {
     setIsSubmitting(true);
     let coverData = oldDestination?.cover || null;
@@ -138,6 +102,8 @@ export function UpdateDestinationForm({ oldDestination, categories }: { oldDesti
         toast.error("Image upload failed. Please try again.");
         setIsSubmitting(false);
         return;
+      } finally {
+        setIsSubmitting(false);
       }
     }
 
@@ -157,6 +123,8 @@ export function UpdateDestinationForm({ oldDestination, categories }: { oldDesti
     if (oldDestination.price === finalData.price) finalData.price = undefined;
     if (oldDestination.latitude === finalData.latitude) finalData.latitude = undefined;
     if (oldDestination.longitude === finalData.longitude) finalData.longitude = undefined;
+
+    if (imagePreview === null) finalData.cover = null;
 
     toast.promise(DestinationRequest.PATCH(oldDestination.id, finalData), {
       loading: "Updating destination...",
@@ -179,6 +147,7 @@ export function UpdateDestinationForm({ oldDestination, categories }: { oldDesti
             </CardHeader>
             <CardContent className="space-y-4 flex flex-1 flex-col justify-start items-stretch">
               <FormField
+                disabled={isSubmitting}
                 control={form.control}
                 name="title"
                 render={({ field }) => (
@@ -193,6 +162,7 @@ export function UpdateDestinationForm({ oldDestination, categories }: { oldDesti
               />
               <FormField
                 control={form.control}
+                disabled={isSubmitting}
                 name="content"
                 render={({ field }) => (
                   <FormItem className="flex-1 flex flex-col justify-start items-stretch">
@@ -206,6 +176,7 @@ export function UpdateDestinationForm({ oldDestination, categories }: { oldDesti
               />
               <FormField
                 control={form.control}
+                disabled={isSubmitting}
                 name="address"
                 render={({ field }) => (
                   <FormItem>
@@ -220,6 +191,7 @@ export function UpdateDestinationForm({ oldDestination, categories }: { oldDesti
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
+                  disabled={isSubmitting}
                   name="latitude"
                   render={({ field }) => (
                     <FormItem>
@@ -234,6 +206,7 @@ export function UpdateDestinationForm({ oldDestination, categories }: { oldDesti
                 <FormField
                   control={form.control}
                   name="longitude"
+                  disabled={isSubmitting}
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Longitude</FormLabel>
@@ -248,6 +221,7 @@ export function UpdateDestinationForm({ oldDestination, categories }: { oldDesti
               <FormField
                 control={form.control}
                 name="mapUrl"
+                disabled={isSubmitting}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Google Maps URL</FormLabel>
@@ -267,6 +241,7 @@ export function UpdateDestinationForm({ oldDestination, categories }: { oldDesti
             </CardHeader>
             <CardContent className="space-y-4">
               <FormField
+                disabled={isSubmitting}
                 control={form.control}
                 name="categoryId"
                 render={({ field }) => (
@@ -293,6 +268,7 @@ export function UpdateDestinationForm({ oldDestination, categories }: { oldDesti
               <FormField
                 control={form.control}
                 name="price"
+                disabled={isSubmitting}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Price (IDR)</FormLabel>
@@ -313,7 +289,7 @@ export function UpdateDestinationForm({ oldDestination, categories }: { oldDesti
             <CardContent>
               {!imagePreview ? (
                 <div className="relative">
-                  <Input type="file" accept="image/*" onChange={handleImageChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                  <Input disabled={isSubmitting} type="file" accept="image/*" onChange={handleImageChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
                   <div className="border-2 border-dashed border-muted-foreground/20 rounded-md p-8 text-center transition-all duration-200 cursor-pointer">
                     <div className="p-4 bg-muted-foreground/5 rounded-full w-fit mx-auto mb-4">
                       <Upload className="h-4 w-4 text-muted-foreground" />
@@ -327,6 +303,7 @@ export function UpdateDestinationForm({ oldDestination, categories }: { oldDesti
                   <img src={imagePreview} alt="Image Preview" className="w-full h-48 object-cover rounded-xl" />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded-xl flex items-center justify-center">
                     <Button
+                      disabled={isSubmitting}
                       variant="destructive"
                       size="sm"
                       className="gap-2"
@@ -354,15 +331,47 @@ export function UpdateDestinationForm({ oldDestination, categories }: { oldDesti
                 {tags.map((tag) => (
                   <Badge key={tag} variant="secondary" className="flex items-center gap-1">
                     {tag}
-                    <button onClick={() => removeTag(tag)}>
+                    <button disabled={isSubmitting} onClick={() => removeTag(tag)}>
                       <X className="h-3 w-3" />
                     </button>
                   </Badge>
                 ))}
               </div>
-              <Input placeholder="Add tags and press Enter" value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={handleTagInputKeyDown} />
+              <Input disabled={isSubmitting} placeholder="Add tags and press Enter" value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={handleTagInputKeyDown} />
             </CardContent>
           </Card>
+          {/* <Card className="shadow-none md:col-span-3">
+            <CardHeader>
+              <CardTitle>Gallery Images</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {existingGallery.length > 0 && (
+                <div className="mb-6">
+                  <p className="text-sm font-medium text-muted-foreground mb-2">Existing Images</p>
+                  <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
+                    {existingGallery.map((img) => (
+                      <div key={img.id} className="relative group aspect-square">
+                        <img src={img.url!} alt="existing gallery" className="w-full h-full object-cover rounded-md" />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveExistingImage(img.id)}
+                          className="absolute top-1 right-1 bg-destructive text-destructive-foreground rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Delete Image"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <p className="text-sm font-medium text-muted-foreground mb-2">Add New Images</p>
+                <GalleryDropzone files={galleryFiles} setFiles={setGalleryFiles} />
+              </div>
+            </CardContent>
+          </Card> */}
 
           <div className="flex justify-end gap-2">
             <Button className="flex-1" variant="secondary" asChild>

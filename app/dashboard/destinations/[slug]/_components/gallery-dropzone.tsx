@@ -50,7 +50,6 @@ export function GalleryDropzone({ files, setFiles }: GalleryDropzoneProps) {
         )}
       </div>
 
-      {/* Pratinjau Gambar */}
       {files.length > 0 && (
         <div className="mt-4 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
           {files.map((file, index) => (
@@ -60,7 +59,7 @@ export function GalleryDropzone({ files, setFiles }: GalleryDropzoneProps) {
                 alt={`preview ${index}`}
                 className="w-full h-full object-cover rounded-md"
                 onLoad={() => {
-                  URL.revokeObjectURL(file.preview); // Revoke setelah gambar dimuat
+                  URL.revokeObjectURL(file.preview);
                 }}
               />
               <button

@@ -34,7 +34,8 @@ export class DestinationRequest {
 
   static async POST(data: any) {
     try {
-      await axiosInstance.post("/destinations", data);
+      const response = await axiosInstance.post("/destinations", data);
+      return response.data.result.id;
     } catch (e) {
       console.error(e);
     }
@@ -52,6 +53,16 @@ export class DestinationRequest {
     try {
       const response = await axiosInstance.delete(`/destinations/${id}`);
       return response.data.result;
+    } catch (e) {
+      console.error(e);
+    }
+  }
+}
+
+export class DestinationGalleryRequest {
+  static async POST(body: { url: string; publicId?: string }[], id: string) {
+    try {
+      await axiosInstance.post(`/destinations/${id}/gallery`, body);
     } catch (e) {
       console.error(e);
     }
