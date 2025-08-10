@@ -9,12 +9,17 @@ import { Trash } from "lucide-react";
 
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { CategoryRequest } from "@/lib/request/category.request";
 
 export default function DeleteAlert({ instance, id, title }: { instance: "destinations" | "traditions" | "categories"; id: string; title?: string }) {
   const router = useRouter();
 
+  let request = null;
+  if (instance === "categories") request = CategoryRequest;
+  if (instance === "destinations") request = DestinationRequest;
+
   const deleteHandle = () => {
-    toast.promise(DestinationRequest.DELETE(id), {
+    toast.promise(request!.DELETE(id), {
       loading: `Deleting ${instance.slice(0, -1)}...`,
       success: () => {
         router.refresh();
@@ -45,7 +50,6 @@ export default function DeleteAlert({ instance, id, title }: { instance: "destin
               Cancel
             </Button>
           </AlertDialogCancel>
-          {/* 4. Call deleteHandle on click and change the button variant */}
           <AlertDialogAction asChild>
             <Button size="sm" variant="destructive" onClick={deleteHandle}>
               Yes, Delete

@@ -1,20 +1,17 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
-export default function DestinationTableSkeleton() {
+export default function CategoriesTableSkeleton() {
   return (
-    <div className="px-4 lg:px-6 flex flex-col justify-start items-stretch gap-2">
+    <div className="flex flex-col justify-start items-stretch gap-2">
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Title</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>Location</TableHead>
-              <TableHead>Tags</TableHead>
-              <TableHead>Price</TableHead>
-              <TableHead>Engagement</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead className="text-center">Engagement</TableHead>
               <TableHead>Created</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -27,24 +24,11 @@ export default function DestinationTableSkeleton() {
                   </div>
                 </TableCell>
                 <TableCell>
-                  <Skeleton className="h-6 w-20" />
-                </TableCell>
-                <TableCell>
                   <Skeleton className="h-4 w-40" />
                 </TableCell>
                 <TableCell>
                   <div className="flex gap-1">
                     <Skeleton className="h-5 w-16" />
-                    <Skeleton className="h-5 w-20" />
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Skeleton className="h-4 w-12" />
-                </TableCell>
-                <TableCell>
-                  <div className="flex gap-3">
-                    <Skeleton className="h-4 w-8" />
-                    <Skeleton className="h-4 w-8" />
                   </div>
                 </TableCell>
                 <TableCell>

@@ -35,6 +35,9 @@ export type CategoryType = {
   name: string;
   slug: string;
   description: string | null;
+  _count: {
+    destinations: number;
+  };
   createdAt: Date;
   updatedAt: Date;
 };

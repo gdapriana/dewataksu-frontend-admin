@@ -1,3 +1,5 @@
+import { CategoriesTable } from "@/app/dashboard/categories/_components/table";
+import CategoriesTableSkeleton from "@/app/dashboard/categories/_components/table-skeleton";
 import { SiteHeader } from "@/components/site-header";
 import { Suspense } from "react";
 
@@ -16,7 +18,9 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ p
         <div className="@container/main flex flex-1 flex-col gap-2">
           <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
             <div className="px-4 lg:px-6">
-              <Suspense key={`${page}-${pageSize}`}></Suspense>
+              <Suspense key={`${page}-${pageSize}`} fallback={<CategoriesTableSkeleton />}>
+                <CategoriesTable page={page} pageSize={pageSize} />
+              </Suspense>
             </div>
           </div>
         </div>
